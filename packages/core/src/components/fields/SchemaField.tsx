@@ -1,4 +1,4 @@
-import { useCallback, Component } from 'react';
+import { useCallback, Component, useRef, useEffect } from 'react';
 import {
   ADDITIONAL_PROPERTY_FLAG,
   deepEquals,
@@ -148,6 +148,23 @@ function SchemaFieldRender<T = any, S extends StrictRJSFSchema = RJSFSchema, F e
     },
     [fieldId, onChange]
   );
+
+  const prevSchemaRef = useRef(schema);
+
+  useEffect(() => {
+    const currentSchema = schema;
+    const prevSchema = prevSchemaRef.current;
+
+    prevSchemaRef.current = currentSchema;
+
+    const hasChanged = !deepEquals(currentSchema, prevSchema);
+
+    if (hasChanged) {
+      const formDataa = schemaUtils.sanitizeDataForNewSchema(currentSchema, prevSchema, formData);
+
+      onChange(formDataa, undefined, fieldId);
+    }
+  }, [schema, formData, schemaUtils, onChange, fieldId]);
 
   const FieldComponent = getFieldComponent<T, S, F>(schema, uiOptions, idSchema, registry);
   const disabled = Boolean(props.disabled || uiOptions.disabled);
